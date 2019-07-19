@@ -60,6 +60,15 @@ class param implements AnnotationTagInterface
             }
         }
     }
+
+    public function aliasMap(): array
+    {
+        return [
+            static::class
+        ];
+    }
+
+
 }
 
 /*
@@ -78,6 +87,13 @@ class timeout implements AnnotationTagInterface
     public function assetValue(?string $raw)
     {
         $this->timeout = floatval($raw);
+    }
+
+    public function aliasMap(): array
+    {
+        return [
+            static::class
+        ];
     }
 }
 

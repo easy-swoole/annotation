@@ -7,6 +7,7 @@ namespace EasySwoole\Annotation;
 class Annotation
 {
     protected $parserTagList = [];
+    protected $aliasMap = [];
     protected $strictMode = false;
 
     function __construct(array $parserTagList = [])
@@ -25,6 +26,13 @@ class Annotation
     function addParserTag(AnnotationTagInterface $annotationTag):Annotation
     {
         $this->parserTagList[$annotationTag->tagName()] = $annotationTag;
+        foreach ($annotationTag->aliasMap() as $item){
+            if(!isset($this->aliasMap[md5($item)])){
+                $this->aliasMap[md5($item)] = $annotationTag->tagName();
+            }else{
+                throw new Exception("alias name {$item} for tag:{$annotationTag->tagName()} is duplicate with tag:{$this->aliasMap[md5($item)]}");
+            }
+        }
         return $this;
     }
 
@@ -58,9 +66,15 @@ class Annotation
             if($pos !== false && $pos <= 3){
                 $lineItem = self::parserLine($line);
                 if($lineItem){
+                    $tagName = '';
                     if(isset($this->parserTagList[$lineItem->getName()])){
+                        $tagName = $lineItem->getName();
+                    }else if(isset($this->aliasMap[md5($lineItem->getName())])){
+                        $tagName = $this->aliasMap[md5($lineItem->getName())];
+                    }
+                    if(isset($this->parserTagList[$tagName])){
                         /** @var AnnotationTagInterface $obj */
-                        $obj = clone $this->parserTagList[$lineItem->getName()];
+                        $obj = clone $this->parserTagList[$tagName];
                         $obj->assetValue($lineItem->getValue());
                         $result[$lineItem->getName()][] = $obj ;
                     }else if($this->strictMode){
