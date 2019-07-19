@@ -105,7 +105,11 @@ foreach ($list['timeout'] as $item){
 
 ## IDE支持
 
-需要自己编写一个下面这样的注解提示类，重点在于使用@Annotation类注释，标记这是一个注解提示类，PHPStorm索引到该文件，就可以对类名和类的成员进行注解提示
+需要为PHPStorm安装"PHP Annotation"插件以提供注解自动提示能力，插件可以在PHPStorm中直接搜索安装，也可以前往Github下载安装
+
+> https://github.com/Haehnchen/idea-php-annotation-plugin
+
+然后自己编写一个下面这样的注解提示类，重点在于使用@Annotation类注释，标记这是一个注解提示类，PHPStorm索引到该文件，就可以对类名和类的成员进行注解提示
 
 ```php
 
