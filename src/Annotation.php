@@ -25,10 +25,10 @@ class Annotation
 
     function addParserTag(AnnotationTagInterface $annotationTag):Annotation
     {
-        $this->parserTagList[$annotationTag->tagName()] = $annotationTag;
+        $this->parserTagList[strtolower($annotationTag->tagName())] = $annotationTag;
         foreach ($annotationTag->aliasMap() as $item){
             if(!isset($this->aliasMap[md5($item)])){
-                $this->aliasMap[md5($item)] = $annotationTag->tagName();
+                $this->aliasMap[md5(strtolower($item))] = $annotationTag->tagName();
             }else{
                 throw new Exception("alias name {$item} for tag:{$annotationTag->tagName()} is duplicate with tag:{$this->aliasMap[md5($item)]}");
             }
@@ -69,12 +69,16 @@ class Annotation
                     $tagName = '';
                     if(isset($this->parserTagList[$lineItem->getName()])){
                         $tagName = $lineItem->getName();
-                    }else if(isset($this->aliasMap[md5($lineItem->getName())])){
-                        $tagName = $this->aliasMap[md5($lineItem->getName())];
+                    }else if(isset($this->aliasMap[md5(strtolower($lineItem->getName()))])){
+                        $tagName = $this->aliasMap[md5(strtolower($lineItem->getName()))];
+                        /*
+                         * 矫正最终名字
+                         */
+                        $lineItem->setName($tagName);
                     }
-                    if(isset($this->parserTagList[$tagName])){
+                    if(isset($this->parserTagList[strtolower($tagName)])){
                         /** @var AnnotationTagInterface $obj */
-                        $obj = clone $this->parserTagList[$tagName];
+                        $obj = clone $this->parserTagList[strtolower($tagName)];
                         $obj->assetValue($lineItem->getValue());
                         $result[$lineItem->getName()][] = $obj ;
                     }else if($this->strictMode){
@@ -90,11 +94,11 @@ class Annotation
 
     public static function parserLine(string $line):?LineItem
     {
-        $pattern = '/@([a-zA-Z][0-9a-zA-Z_]*?)\((.*)\)/';
+        $pattern = '/@(\\\?[a-zA-Z][0-9a-zA-Z_]*?)\((.*)\)/';
         preg_match($pattern, $line,$match);
         if(is_array($match) && (count($match) == 3)){
             $item = new LineItem();
-            $item->setName($match[1]);
+            $item->setName(trim($match[1]," \t\n\r\0\x0B\\"));
             $item->setValue($match[2]);
             return $item;
         }else{
