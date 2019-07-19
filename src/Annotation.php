@@ -94,7 +94,7 @@ class Annotation
 
     public static function parserLine(string $line):?LineItem
     {
-        $pattern = '/@(\\\?[a-zA-Z][0-9a-zA-Z_]*?)\((.*)\)/';
+        $pattern = '/@(\\\?[a-zA-Z][0-9a-zA-Z_\\\]*?)\((.*)\)/';
         preg_match($pattern, $line,$match);
         if(is_array($match) && (count($match) == 3)){
             $item = new LineItem();
