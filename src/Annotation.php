@@ -99,7 +99,7 @@ class Annotation
         if(is_array($match) && (count($match) == 3)){
             $item = new LineItem();
             $item->setName(trim($match[1]," \t\n\r\0\x0B\\"));
-            $item->setValue($match[2]);
+            $item->setValue(trim($match[2]));
             return $item;
         }else{
             return null;
