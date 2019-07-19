@@ -104,3 +104,58 @@ foreach ($list['timeout'] as $item){
 > 注释每行前3个字符若存在@,说明该行为需要解析注释行，默认为非严格模式，未注册的tag信息不会解析，严格模式下，若无法解析则会抛出异常。
 
 ## IDE支持
+
+需要自己编写一个下面这样的注解提示类，重点在于使用@Annotation类注释，标记这是一个注解提示类，PHPStorm索引到该文件，就可以对类名和类的成员进行注解提示
+
+```php
+
+<?php
+
+
+namespace EasySwoole\Validate;
+
+/**
+ * 注解标注文件
+ * @Annotation
+ * 需要向上方这样使用Annotation标记这是一个注解提示类
+ */
+final class ValidateRule
+{
+    /**
+     * 括号内会提示这些字段
+     * @var string
+     */
+    protected $name;
+
+    /**
+     * 括号内会提示这些字段
+     * @var string
+     */
+    protected $column;
+
+    /**
+     * 括号内会提示这些字段
+     * @var string
+     */
+    protected $alias;
+}
+
+```
+
+即可实现下面aaa方法的自动注解提示
+
+```php
+<?php
+
+use EasySwoole\Validate as Validate;
+
+class a
+{
+    /**
+     * @Validate\ValidateRule(column="name",alias="账号名称")
+     */
+    function aaa(){
+
+    }
+}
+```
