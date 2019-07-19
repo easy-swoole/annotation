@@ -6,6 +6,34 @@ namespace EasySwoole\Annotation;
 
 class Annotation
 {
+    protected $parserTagList = [];
+    protected $strictMode = false;
+
+    function __construct(array $parserTagList = [])
+    {
+        $this->parserTagList = $parserTagList;
+    }
+
+    public function strictMode(?bool $strict = null)
+    {
+        if($strict !== null){
+            $this->strictMode = $strict;
+        }
+        return $this->strictMode;
+    }
+
+    function addParserTag(AnnotationTagInterface $annotationTag):Annotation
+    {
+        $this->parserTagList[$annotationTag->tagName()] = $annotationTag;
+        return $this;
+    }
+
+    function deleteParserTag(string $tagName):Annotation
+    {
+        unset($this->parserTagList[$tagName]);
+        return $this;
+    }
+
     function getPropertyAnnotation(\ReflectionProperty $property):array
     {
         $doc = $property->getDocComment();
@@ -22,59 +50,41 @@ class Annotation
 
     private function parser(string $doc):array
     {
-        $label = false;
-        $temp = '';
-        $list = [];
-        $final = [];
-        for($i = 0;$i < strlen($doc);$i++){
-            if($doc[$i] == '@'){
-                $temp = '';
-                $label = true;
-            }else if($label){
-                if($doc[$i] == PHP_EOL){
-                    $list[] = trim($temp);
-                    $label = false;
-                }else{
-                    $temp = $temp.$doc[$i];
+        $result = [];
+        $tempList = explode(PHP_EOL,$doc);
+        foreach ($tempList as $line){
+            $line = trim($line);
+            $pos = strpos($line,'@');
+            if($pos !== false && $pos <= 3){
+                $lineItem = self::parserLine($line);
+                if($lineItem){
+                    if(isset($this->parserTagList[$lineItem->getName()])){
+                        /** @var AnnotationTagInterface $obj */
+                        $obj = clone $this->parserTagList[$lineItem->getName()];
+                        $obj->assetValue($lineItem->getValue());
+                        $result[$lineItem->getName()][] = $obj ;
+                    }else if($this->strictMode){
+                        throw new Exception("parser fail because of unregister tag name:{$lineItem->getName()} in strict parser mode");
+                    }
+                }else if($this->strictMode){
+                    throw new Exception("parser fail for data:{$line} in strict parser mode");
                 }
             }
         }
-        foreach ($list as $item){
-            if(in_array($item[0],['(',')'])){
-                continue;
-            }
-            $func = '';
-            $arg = '';
-            $label = 0;
-            $finaleArg = new \stdClass();
-            for($i = 0;$i < strlen($item);$i++){
-                if($label == 0){
-                    if($item[$i] != '('){
-                        $func = $func.$item[$i];
-                    }else{
-                        $label = 1;
-                    }
-                }else if($label == 1){
-                    if($item[$i] != ')'){
-                        $arg = $arg.$item[$i];
-                    }else{
-                        $label = 0;
-                        break;
-                    }
-                }
-            }
-            if($label != 0){
-                continue;
-            }
-            $args = explode(',',$arg);
-            foreach ($args as $argStr){
-                parse_str($argStr,$array);
-                foreach ($array as $key => $v){
-                    $finaleArg->$key = $v;
-                }
-            }
-            $final[$func][] = $finaleArg;
+        return $result;
+    }
+
+    public static function parserLine(string $line):?LineItem
+    {
+        $pattern = '/@([a-zA-Z][0-9a-zA-Z_]*?)\((.*)\)/';
+        preg_match($pattern, $line,$match);
+        if(is_array($match) && (count($match) == 3)){
+            $item = new LineItem();
+            $item->setName($match[1]);
+            $item->setValue($match[2]);
+            return $item;
+        }else{
+            return null;
         }
-        return $final;
     }
 }
