@@ -67,7 +67,7 @@ class Annotation
                 $lineItem = self::parserLine($line);
                 if($lineItem){
                     $tagName = '';
-                    if(isset($this->parserTagList[$lineItem->getName()])){
+                    if(isset($this->parserTagList[strtolower($lineItem->getName())])){
                         $tagName = $lineItem->getName();
                     }else if(isset($this->aliasMap[md5(strtolower($lineItem->getName()))])){
                         $tagName = $this->aliasMap[md5(strtolower($lineItem->getName()))];
