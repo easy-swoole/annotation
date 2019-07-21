@@ -94,4 +94,13 @@ class ValueParserTest extends TestCase
             'time'=>time()
         ],ValueParser::parser($str));
     }
+
+
+    function testStrMulti()
+    {
+        $str = 'mix="first|{1,2,3}|eval(time() + 3)"';
+        $this->assertEquals([
+            'mix'=>['first',['1','2','3'],time() + 3]
+        ],ValueParser::parser($str));
+    }
 }
