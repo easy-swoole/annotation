@@ -13,11 +13,14 @@
 
 ## 例子
 ```
+use EasySwoole\Annotation\Annotation;
+use EasySwoole\Annotation\AbstractAnnotationTag;
+
 /*
  * 定义param渲染方法
  */
 
-class param implements AnnotationTagInterface
+class param extends AbstractAnnotationTag
 {
 
     public function tagName(): string
@@ -31,16 +34,9 @@ class param implements AnnotationTagInterface
         foreach ($list as $item){
             parse_str($item,$ret);
             foreach ($ret as $key => $value){
-                $this->$key = $value;
+                $this->$key = trim($value," \t\n\r\0\x0B\"\'");
             }
         }
-    }
-
-    public function aliasMap(): array
-    {
-        return [
-            static::class
-        ];
     }
 }
 
@@ -48,7 +44,7 @@ class param implements AnnotationTagInterface
  * 定义timeout渲染方法
  */
 
-class timeout implements AnnotationTagInterface
+class timeout extends AbstractAnnotationTag
 {
     public $timeout;
 
@@ -79,7 +75,7 @@ class A
     /**
      * @param(name=a,type=string,value=2)
      * @param(name=b)
-     * @timeout_alias(0.5)
+     * @timeout_Alias(0.5)
      * @fuck(easyswoole)
      * 这是我的其他说明啊啊啊啊啊
      */
@@ -109,6 +105,7 @@ foreach ($list['param'] as $item){
 foreach ($list['timeout'] as $item){
     var_dump((array)$item);
 }
+
 ```
 
 > 注释每行前3个字符若存在@,说明该行为需要解析注释行，默认为非严格模式，未注册的tag信息不会解析，严格模式下，若无法解析则会抛出异常。

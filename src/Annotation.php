@@ -23,7 +23,7 @@ class Annotation
         return $this->strictMode;
     }
 
-    function addParserTag(AnnotationTagInterface $annotationTag):Annotation
+    function addParserTag(AbstractAnnotationTag $annotationTag):Annotation
     {
         $this->parserTagList[strtolower($annotationTag->tagName())] = $annotationTag;
         foreach ($annotationTag->aliasMap() as $item){
@@ -77,7 +77,7 @@ class Annotation
                         $lineItem->setName($tagName);
                     }
                     if(isset($this->parserTagList[strtolower($tagName)])){
-                        /** @var AnnotationTagInterface $obj */
+                        /** @var AbstractAnnotationTag $obj */
                         $obj = clone $this->parserTagList[strtolower($tagName)];
                         $obj->assetValue($lineItem->getValue());
                         $result[$lineItem->getName()][] = $obj ;
