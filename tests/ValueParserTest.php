@@ -63,21 +63,26 @@ class ValueParserTest extends TestCase
 
     function testEval()
     {
-        $str = 'time=eval(time() + 30)';
+        $str = 'time="eval(time() + 30)"';
         $this->assertEquals([
             'time'=>time() + 30,
         ],ValueParser::parser($str));
 
-        $str = 'time=eval(time() + 30) , time2=eval(time() + 31)';
+        $str = 'time="eval(time() + 30)" , time2="eval(time() + 31)';
         $this->assertEquals([
             'time'=>time() + 30,
             'time2'=>time() + 31
+        ],ValueParser::parser($str));
+
+        $str = 'list="eval([1,2,3,4])"';
+        $this->assertEquals([
+            'list'=>[1,2,3,4]
         ],ValueParser::parser($str));
     }
 
     function testArrayAndEval()
     {
-        $str = 'array={"1","2",eval(time() + 30)}';
+        $str = 'array="{"1","2",eval(time() + 30)}"';
         $this->assertEquals([
             'array'=>['1','2',time() + 30]
         ],ValueParser::parser($str));
