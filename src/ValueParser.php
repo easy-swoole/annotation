@@ -141,8 +141,13 @@ class ValueParser
         if(substr($value,0,5) == 'eval('  && substr($value,-1,1) == ')'){
             $value =  substr($value,5,strlen($value) - 6);
             return eval("return {$value} ;");
-        }else{
-            return $value;
+        }if($value == 'true'){
+             $value = true;
+        }else if($value == 'false'){
+            $value = false;
+        }else if($value == 'null'){
+            $value = null;
         }
+        return $value;
     }
 }
