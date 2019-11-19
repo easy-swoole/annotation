@@ -21,7 +21,11 @@
     },
     "autoload": {
         "psr-4": {
-            "EasySwoole\\Annotation\\": "src/",
+            "EasySwoole\\Annotation\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
             "EasySwoole\\Annotation\\Tests\\": "tests/"
         }
     }
