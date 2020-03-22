@@ -15,24 +15,26 @@ class Annotation
         $this->parserTagList = $parserTagList;
     }
 
-    public function strictMode(?bool $strict = null)
+    function addAlias(string $alias,string $realTagName)
     {
-        if($strict !== null){
-            $this->strictMode = $strict;
-        }
-        return $this->strictMode;
+        $this->aliasMap[strtolower($alias)] = $realTagName;
+        return $this;
     }
+
+    public function strictMode(bool $is)
+    {
+        $this->strictMode = $is;
+        return $this;
+    }
+
 
     function addParserTag(AbstractAnnotationTag $annotationTag):Annotation
     {
-        $this->parserTagList[strtolower($annotationTag->tagName())] = $annotationTag;
-        foreach ($annotationTag->aliasMap() as $item){
-            if(!isset($this->aliasMap[md5($item)])){
-                $this->aliasMap[md5(strtolower($item))] = $annotationTag->tagName();
-            }else{
-                throw new Exception("alias name {$item} for tag:{$annotationTag->tagName()} is duplicate with tag:{$this->aliasMap[md5($item)]}");
-            }
+        $name = strtolower($annotationTag->tagName());
+        if(isset($this->aliasMap[$name])){
+            throw new Exception("tag alias name {$name} and tag name is duplicate");
         }
+        $this->parserTagList[$name] = $annotationTag;
         return $this;
     }
 
@@ -59,50 +61,92 @@ class Annotation
     private function parser(string $doc):array
     {
         $result = [];
+        $start = false;
+        $temp = '';
         $tempList = explode(PHP_EOL,$doc);
         foreach ($tempList as $line){
-            $line = trim($line);
-            $pos = strpos($line,'@');
-            if($pos !== false && $pos <= 3){
-                $lineItem = self::parserLine($line);
-                if($lineItem){
-                    $tagName = '';
-                    if(isset($this->parserTagList[strtolower($lineItem->getName())])){
-                        $tagName = $lineItem->getName();
-                    }else if(isset($this->aliasMap[md5(strtolower($lineItem->getName()))])){
-                        $tagName = $this->aliasMap[md5(strtolower($lineItem->getName()))];
-                        /*
-                         * 矫正最终名字
-                         */
-                        $lineItem->setName($tagName);
+            //除去空格和*
+            $line = ltrim($line.PHP_EOL," *");
+            if(!$start){
+                $pos = strpos($line,'@');
+                if($pos !== false && $pos <= 3){
+                    $start = true;
+                    //取出 到@符号(包括)之前的字符串
+                    $temp .= substr($line,$pos + 1);
+                    $ret = static::parserLine($temp);
+                    if($ret){
+                        $this->handleLineItem($ret,$result);
+                        $temp = '';
+                        $start = false;
                     }
-                    if(isset($this->parserTagList[strtolower($tagName)])){
-                        /** @var AbstractAnnotationTag $obj */
-                        $obj = clone $this->parserTagList[strtolower($tagName)];
-                        $obj->assetValue($lineItem->getValue());
-                        $result[$lineItem->getName()][] = $obj ;
-                    }else if($this->strictMode){
-                        throw new Exception("parser fail because of unregister tag name:{$lineItem->getName()} in strict parser mode");
-                    }
-                }else if($this->strictMode){
-                    throw new Exception("parser fail for data:{$line} in strict parser mode");
+                }
+            }else{
+                $temp .= $line;
+                $ret = static::parserLine($temp);
+                if($ret){
+                    $this->handleLineItem($ret,$result);
+                    $temp = '';
+                    $start = false;
                 }
             }
         }
         return $result;
     }
 
+    private function handleLineItem(LineItem $item,array &$result)
+    {
+        $name = $item->getName();
+        if(isset($this->aliasMap[strtolower($name)])){
+            $name = $this->aliasMap[strtolower($name)];
+            $item->setName($name);
+        }
+        if(isset($this->parserTagList[$name])){
+            /** @var AbstractAnnotationTag $tag */
+            $tag = clone $this->parserTagList[$name];
+            $tag->assetValue($item->getValue());
+            $result[$name][] = $tag;
+        }else if($this->strictMode){
+            throw new Exception("parser fail because of unregister tag name:{$name} in strict parser mode");
+        }
+    }
+
     public static function parserLine(string $line):?LineItem
     {
-        $pattern = '/@(\\\?[a-zA-Z][0-9a-zA-Z_\\\]*?)\((.*)\)/';
-        preg_match($pattern, $line,$match);
-        if(is_array($match) && (count($match) == 3)){
-            $item = new LineItem();
-            $item->setName(trim($match[1]," \t\n\r\0\x0B\\"));
-            $item->setValue(trim($match[2]));
-            return $item;
-        }else{
-            return null;
+        //括号匹配
+        $brackets = false;
+        $value = '';
+        $name = '';
+        $len = strlen($line);
+        $valueLen = 0;
+        for ($i = 0;$i < $len;$i++){
+            $char = $line[$i];
+            if($brackets === false){
+                if($char != '('){
+                    $name .= $line[$i];
+                }else{
+                    $brackets = 1;
+                    $value .= $line[$i];
+                }
+            }else{
+                if($char == ')'){
+                    $brackets--;
+                }
+                $value .= $line[$i];
+                if($brackets === 0){
+                    break;
+                }
+            }
         }
+        //-2 是因为PHP_EOL 1  还有index 从0开始
+        if(($brackets === 0) && ($i == ( $len - 2))){
+            $item = new LineItem();
+            $item->setName($name);
+            //取出括号
+            $value = substr($value,1,- 1);
+            $item->setName($name);
+            $item->setValue($value);
+            return $item;
+        }
+        return null;
     }
 }

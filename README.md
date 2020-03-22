@@ -13,6 +13,7 @@
 
 ## 例子
 ```
+
 use EasySwoole\Annotation\Annotation;
 use EasySwoole\Annotation\AbstractAnnotationTag;
 
@@ -95,6 +96,7 @@ $ref = new \ReflectionClass(A::class);
 //不注册fuck 解析
 $annotation->addParserTag(new param());
 $annotation->addParserTag(new timeout());
+$annotation->addAlias('timeout_alias','timeout');
 
 $list = $annotation->getClassMethodAnnotation($ref->getMethod('test'));
 
@@ -105,7 +107,6 @@ foreach ($list['param'] as $item){
 foreach ($list['timeout'] as $item){
     var_dump((array)$item);
 }
-
 ```
 
 > 注释每行前3个字符若存在@,说明该行为需要解析注释行，默认为非严格模式，未注册的tag信息不会解析，严格模式下，若无法解析则会抛出异常。
