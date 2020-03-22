@@ -98,13 +98,14 @@ class ValueParserTest extends TestCase
 
     function testStrMulti()
     {
-        $str = 'mix={first,{1,2,3},eval(time() + 3)},int=1,strInt="2",arr={1,2,3},b="asdasda"';
+        $str = 'mix={first,{1,2,3},eval(time() + 3)},int=1,strInt="2",arr={1,2,3},b="asdasda",d=abcdefh';
         $this->assertEquals([
             'mix'=>['first',['1','2','3'],time() + 3],
             'int'=>1,
             'strInt'=>'2',
             'arr'=>[1,2,3],
             'b'=>'asdasda',
+            'd'=>'abcdefh'
         ],ValueParser::parser($str));
     }
 }
