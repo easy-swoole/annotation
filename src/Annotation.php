@@ -44,14 +44,8 @@ class Annotation
         return $this;
     }
 
-    function getPropertyAnnotation(\ReflectionProperty $property):array
-    {
-        $doc = $property->getDocComment();
-        $doc = $doc ? $doc : '';
-        return $this->parser($doc);
-    }
 
-    function getClassMethodAnnotation(\ReflectionMethod $method):array
+    function getAnnotation(\Reflector $method):array
     {
         $doc = $method->getDocComment();
         $doc = $doc ? $doc : '';
@@ -112,6 +106,9 @@ class Annotation
 
     public static function parserLine(string $line):?LineItem
     {
+        if(substr_count($line,'(') != substr_count($line,')')){
+            return null;
+        }
         //先找出name
         $pos = strpos($line,'(');
         if($pos <= 0){
@@ -121,14 +118,15 @@ class Annotation
         if(empty($name)){
             return null;
         }
-        $line = substr($line,$pos);
-        //如果最后的不是) ,肯定是非法注释
-        if(substr($line,-2,1) == ')'){
-            $item = new LineItem();
-            $item->setName($name);
-            $item->setValue(substr($line,1,-2));
-            return $item;
+        $line = substr($line,$pos + 1);
+        $pos = strrpos($line,')');
+        if($pos === false){
+            return null;
         }
-        return null;
+        $line = substr($line,0,$pos);
+        $item = new LineItem();
+        $item->setName($name);
+        $item->setValue($line);
+        return $item;
     }
 }

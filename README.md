@@ -22,7 +22,7 @@ use EasySwoole\Annotation\AbstractAnnotationTag;
 
 class param extends AbstractAnnotationTag
 {
-
+    public $raw;
     public function tagName(): string
     {
         return 'param';
@@ -30,7 +30,7 @@ class param extends AbstractAnnotationTag
 
     public function assetValue(?string $raw)
     {
-        var_dump($raw);
+        $this->raw = $raw;
     }
 }
 
@@ -63,7 +63,7 @@ class timeout extends AbstractAnnotationTag
 
 class A
 {
-    /** @var  */
+    /** @timeout()  */
     protected $a;
 
     /**
@@ -79,10 +79,6 @@ class A
             },
             "signature": "023e301373b4226e6a0ea1bbdadeaa06"
         })
-     * @timeout_Alias(0.5)
-     * @fuck(easyswoole)
-     * @param(name=a,type=string,value=2)
-     * 这是我的其他说明啊啊啊啊啊
      */
     function test()
     {
@@ -102,11 +98,12 @@ $annotation->addParserTag(new param());
 $annotation->addParserTag(new timeout());
 $annotation->addAlias('timeout_alias','timeout');
 
-$list = $annotation->getClassMethodAnnotation($ref->getMethod('test'));
+$list = $annotation->getAnnotation($ref->getMethod('test'));
+var_dump($list);
 
-foreach ($list['timeout'] as $item){
-    var_dump((array)$item);
-}
+$list = $annotation->getAnnotation($ref->getProperty('a'));
+
+var_dump($list);
 ```
 
 > 注释每行前3个字符若存在@,说明该行为需要解析注释行，默认为非严格模式，未注册的tag信息不会解析，严格模式下，若无法解析则会抛出异常。
