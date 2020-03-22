@@ -65,11 +65,16 @@ class Annotation
         $temp = '';
         $tempList = explode(PHP_EOL,$doc);
         foreach ($tempList as $line){
-            //除去空格和*
-            $line = ltrim($line.PHP_EOL," *");
+            //补回去PHP_EOL
+            $line = $line.PHP_EOL;
+            //取出*
+            $pos = strpos($line,'*');
+            if($pos !== false){
+                $line = substr($line,$pos +1);
+            }
             if(!$start){
                 $pos = strpos($line,'@');
-                if($pos !== false && $pos <= 3){
+                if($pos !== false){
                     $start = true;
                     //取出 到@符号(包括)之前的字符串
                     $temp .= substr($line,$pos + 1);
