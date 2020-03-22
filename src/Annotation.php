@@ -67,7 +67,7 @@ class Annotation
         foreach ($tempList as $line){
             //补回去PHP_EOL
             $line = $line.PHP_EOL;
-            //取出*
+            //去除出*
             $pos = strpos($line,'*');
             if($pos !== false){
                 $line = substr($line,$pos +1);
