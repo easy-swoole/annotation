@@ -8,39 +8,43 @@ class ValueParser
 {
     public static function parser(?string $raw):array
     {
-        /*
-         * 以逗号为分隔符，分割配置项
-         */
+        $params = static::explodeSubject($raw);
+
+        array_walk_recursive($params,function (&$value,$key){
+            $value = static::eval($value);
+        });
+
+        return $params;
+    }
+
+    protected static function explodeSubject(string $raw):array
+    {
         $allParams = [];
-        $hasQuotation = false;
-        $hasArray = false;
+        $hasQuotation = 0;
+        $hasArray = 0;
         $temp = '';
-        for($i = 0;$i < strlen($raw);$i++){
-            if($raw[$i] == ','){
-                if($hasQuotation || $hasArray){
-                    $temp = $temp.$raw[$i];
-                }else{
-                    $allParams[] = $temp;
-                    $temp = '';
-                }
-            }else{
-                $temp = $temp.$raw[$i];
+        $len =  strlen($raw);
+        for($i = 0;$i < $len;$i++){
+            $char = $raw[$i];
+            if($char == "{"){
+                $hasArray++;
+            }else if($char == "}"){
+                $hasArray--;
             }
-            if($raw[$i] == "\""){
-                if($hasQuotation){
-                    $hasQuotation = false;
-                }else{
-                    $hasQuotation = true;
-                }
+            if($char == '"'){
+                $hasQuotation = ~$hasQuotation;
             }
-            if($hasArray){
-                if($raw[$i] == '}'){
-                    $hasArray = false;
-                }
+            //如果不在引号内，删除空格
+            if(!$hasQuotation && $char == ' '){
+                $char = '';
+            }
+            //不在引号或者是数组内，遇到逗号结束
+            if(($hasArray == false) && ($hasQuotation === 0) && ($char == ',')){
+                $allParams[] = $temp;
+                $temp = '';
             }else{
-                if($raw[$i] == '{'){
-                    $hasArray = true;
-                }
+
+                $temp .= $char;
             }
         }
         /*
@@ -49,95 +53,37 @@ class ValueParser
         if(!empty($temp)){
             $allParams[] = $temp;
         }
-        $final = [];
-        foreach ($allParams as $paramRaw){
-            $temp = self::parserKeyValue($paramRaw);
-            if(is_array($temp)){
-                $final = $final + $temp;
-            }
-        }
-        return $final;
 
-    }
-
-    /**
-     * 解析一个字符串到key value形式
-     * eg:
-     *  param=1
-     *  param={1,2,3}
-     *  param="eval(time() + 2)"
-     *  param="{1,2,3}|asd"
-     *
-     * @param string|null $raw
-     * @return array|null
-     */
-    public static function parserKeyValue(?string $raw):?array
-    {
-        /*
-         * 找出第一个等号
-         */
-        $pos = strpos($raw,'=');
-        if($pos > 0){
-            $key = trim(substr($raw,0,$pos));
-            $raw = trim(substr($raw,$pos+1)," \t\n\r\0\x0B\"");
-            $explodeList = explode("|",$raw);
-            if(count($explodeList) > 1){
-                $tempList = [];
-                foreach ($explodeList as $temp){
-                    $tempList[] = self::parserValue($temp);
-                }
-                return [
-                    $key=>$tempList
-                ];
+        $ret = [];
+        $key = -1;
+        foreach ($allParams as $val){
+            $pos = strpos($val,'=');
+            if($pos > 0){
+                $key = substr($val,0,$pos);
+                $val = substr($val,$pos + 1);
             }else{
-                return [
-                    $key=>self::parserValue($raw)
-                ];
+                $key++;
             }
+            if(substr($val,0,1) == '{' && substr($val,-1,1) == '}'){
+                $val = static::explodeSubject(substr($val,1,-1));
+            }
+            $ret[$key] = $val;
         }
-        return null;
+        return $ret;
     }
 
-    public static function parserValue(?string $value)
+    protected static function eval($value)
     {
-
-        if(substr($value,0,1) == '{' && substr($value,-1,1) == '}'){
-            /*
-             * {} 数组支持
-            */
-            $list = [];
-            $raw = trim($value,"{}");
-            $hasQuotation = false;
-            $temp = '';
-            for($i = 0;$i < strlen($raw);$i++){
-                if($raw[$i] == ',' && (!$hasQuotation)){
-                    $list[] = $temp;
-                    $temp = '';
-                }else{
-                    $temp = $temp.$raw[$i];
-                }
-                if($raw[$i] == "'"){
-                    if($hasQuotation){
-                        $hasQuotation = false;
-                    }else{
-                        $hasQuotation = true;
-                    }
-                }
-            }
-            if(!empty($temp)){
-                $list[] = $temp;
-            }
-            foreach ($list as $index => $item){
-                $list[$index] = self::eval(trim($item," \t\n\r\0\x0B\"'"));
-            }
-            return $list;
-        }else{
-            return self::eval(trim($value," \t\n\r\0\x0B\"'"));
+        //取出两边的双引号
+        $hasQuote = 0;
+        if(substr($value,0,1) == '"'){
+            $value = substr($value,1);
+            $hasQuote++;
         }
-    }
-
-    public static function eval($value)
-    {
+        if(substr($value,-1,1) == '"'){
+            $value = substr($value,0,-1);
+            $hasQuote++;
+        }
         if(substr($value,0,5) == 'eval('  && substr($value,-1,1) == ')'){
             $value =  substr($value,5,strlen($value) - 6);
             return eval("return {$value} ;");
@@ -147,6 +93,12 @@ class ValueParser
             $value = false;
         }else if($value == 'null'){
             $value = null;
+        }else if(is_numeric($value)){
+            if((abs($value) - abs(intval($value)) < 0.00001) && ($hasQuote == 0)){
+                return intval($value);
+            }else{
+                return floatval($value);
+            }
         }
         return $value;
     }

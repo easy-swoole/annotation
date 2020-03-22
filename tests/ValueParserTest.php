@@ -13,7 +13,7 @@ class ValueParserTest extends TestCase
     {
         $str = "int=1";
         $this->assertEquals([
-            'int'=>"1"
+            'int'=>1
         ],ValueParser::parser($str));
 
         $str = "int=1,int2=2";
@@ -22,10 +22,10 @@ class ValueParserTest extends TestCase
             'int2'=>"2"
         ],ValueParser::parser($str));
 
-        $str = "int=1,int2='2'";
+        $str = "int=1,str='2'";
         $this->assertEquals([
             'int'=>"1",
-            'int2'=>"2"
+            'str'=>"'2'"
         ],ValueParser::parser($str));
     }
 
@@ -33,29 +33,24 @@ class ValueParserTest extends TestCase
     {
         $str = "array={1,2,3}";
         $this->assertEquals([
-            'array'=>['1','2','3']
+            'array'=>[1,2,3]
         ],ValueParser::parser($str));
 
         $str = "array={'1','2','3'}";
         $this->assertEquals([
-            'array'=>['1','2','3']
+            'array'=>["'1'","'2'","'3'"]
         ],ValueParser::parser($str));
 
 
-        $str = "array={'1','2 , 3'}";
+        $str = 'array={"1","2 , 3"}';
         $this->assertEquals([
-            'array'=>['1','2 , 3']
-        ],ValueParser::parser($str));
-
-        $str = 'array={"1","2","3"}';
-        $this->assertEquals([
-            'array'=>['1','2','3']
+            'array'=>["1","2 , 3"]
         ],ValueParser::parser($str));
 
         $str = "array={1,2,3} ,array2={4,5,6}";
         $this->assertEquals([
-            'array'=>['1','2','3'],
-            'array2'=>['4','5','6']
+            'array'=>[1,2,3],
+            'array2'=>[4,5,6]
         ],ValueParser::parser($str));
 
     }
@@ -82,20 +77,20 @@ class ValueParserTest extends TestCase
 
     function testArrayAndEval()
     {
-        $str = 'array="{"1","2",eval(time() + 30)}"';
+        $str = 'array={1,2,eval(time() + 30)}';
         $this->assertEquals([
-            'array'=>['1','2',time() + 30]
+            'array'=>[1,2,time() + 30]
         ],ValueParser::parser($str));
 
-        $str = 'array={"1","2",eval(time() + 30)},str="222"';
+        $str = 'array={1,2,eval(time() + 30)},str="222"';
         $this->assertEquals([
-            'array'=>['1','2',time() + 30],
+            'array'=>[1,2,time() + 30],
             "str"=>'222'
         ],ValueParser::parser($str));
 
         $str = "array={1,2,3},time=eval(time())";
         $this->assertEquals([
-            'array'=>['1','2','3'],
+            'array'=>[1,2,3],
             'time'=>time()
         ],ValueParser::parser($str));
     }
@@ -103,9 +98,11 @@ class ValueParserTest extends TestCase
 
     function testStrMulti()
     {
-        $str = 'mix="first|{1,2,3}|eval(time() + 3)"';
+        $str = 'mix={first,{1,2,3},eval(time() + 3)},str=1,arr={1,2,3}';
         $this->assertEquals([
-            'mix'=>['first',['1','2','3'],time() + 3]
+            'mix'=>['first',['1','2','3'],time() + 3],
+            'str'=>1,
+            'arr'=>[1,2,3]
         ],ValueParser::parser($str));
     }
 }
