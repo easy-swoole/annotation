@@ -67,11 +67,6 @@ class Annotation
         foreach ($tempList as $line){
             //补回去PHP_EOL
             $line = $line.PHP_EOL;
-            //去除出*
-            $pos = strpos($line,'*');
-            if($pos !== false){
-                $line = substr($line,$pos +1);
-            }
             if(!$start){
                 $pos = strpos($line,'@');
                 if($pos !== false){
@@ -117,39 +112,21 @@ class Annotation
 
     public static function parserLine(string $line):?LineItem
     {
-        //括号匹配
-        $brackets = false;
-        $value = '';
-        $name = '';
-        $len = strlen($line);
-        $valueLen = 0;
-        for ($i = 0;$i < $len;$i++){
-            $char = $line[$i];
-            if($brackets === false){
-                if($char != '('){
-                    $name .= $line[$i];
-                }else{
-                    $brackets = 1;
-                    $value .= $line[$i];
-                }
-            }else{
-                if($char == ')'){
-                    $brackets--;
-                }
-                $value .= $line[$i];
-                if($brackets === 0){
-                    break;
-                }
-            }
+        //先找出name
+        $pos = strpos($line,'(');
+        if($pos <= 0){
+            return null;
         }
-        //-2 是因为PHP_EOL 1  还有index 从0开始
-        if(($brackets === 0) && ($i == ( $len - 2))){
+        $name = trim(substr($line,0,$pos),' ');
+        if(empty($name)){
+            return null;
+        }
+        $line = substr($line,$pos);
+        //如果最后的不是) ,肯定是非法注释
+        if(substr($line,-2,1) == ')'){
             $item = new LineItem();
             $item->setName($name);
-            //取出括号
-            $value = substr($value,1,- 1);
-            $item->setName($name);
-            $item->setValue($value);
+            $item->setValue(substr($line,1,-2));
             return $item;
         }
         return null;

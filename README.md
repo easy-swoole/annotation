@@ -13,7 +13,6 @@
 
 ## 例子
 ```
-
 use EasySwoole\Annotation\Annotation;
 use EasySwoole\Annotation\AbstractAnnotationTag;
 
@@ -31,13 +30,7 @@ class param extends AbstractAnnotationTag
 
     public function assetValue(?string $raw)
     {
-        $list = explode(',',$raw);
-        foreach ($list as $item){
-            parse_str($item,$ret);
-            foreach ($ret as $key => $value){
-                $this->$key = trim($value," \t\n\r\0\x0B\"\'");
-            }
-        }
+        var_dump($raw);
     }
 }
 
@@ -74,10 +67,21 @@ class A
     protected $a;
 
     /**
-     * @param(name=a,type=string,value=2)
-     * @param(name=b)
+     * asdasdasd
+     * @param(
+        {
+            "machineId": "X0592-0010",
+           "time": 1582795808,
+            "data": {
+            "action": "newPhone()",
+            "phone": "15505923573",
+            "ismi": "ismi12456"
+            },
+            "signature": "023e301373b4226e6a0ea1bbdadeaa06"
+        })
      * @timeout_Alias(0.5)
      * @fuck(easyswoole)
+     * @param(name=a,type=string,value=2)
      * 这是我的其他说明啊啊啊啊啊
      */
     function test()
@@ -99,10 +103,6 @@ $annotation->addParserTag(new timeout());
 $annotation->addAlias('timeout_alias','timeout');
 
 $list = $annotation->getClassMethodAnnotation($ref->getMethod('test'));
-
-foreach ($list['param'] as $item){
-    var_dump((array)$item);
-}
 
 foreach ($list['timeout'] as $item){
     var_dump((array)$item);
