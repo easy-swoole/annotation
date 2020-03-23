@@ -17,7 +17,7 @@ class Annotation
 
     function addAlias(string $alias,string $realTagName)
     {
-        $this->aliasMap[strtolower($alias)] = $realTagName;
+        $this->aliasMap[$alias] = $realTagName;
         return $this;
     }
 
@@ -30,7 +30,7 @@ class Annotation
 
     function addParserTag(AbstractAnnotationTag $annotationTag):Annotation
     {
-        $name = strtolower($annotationTag->tagName());
+        $name = $annotationTag->tagName();
         if(isset($this->aliasMap[$name])){
             throw new Exception("tag alias name {$name} and tag name is duplicate");
         }
@@ -90,8 +90,8 @@ class Annotation
     private function handleLineItem(LineItem $item,array &$result)
     {
         $name = $item->getName();
-        if(isset($this->aliasMap[strtolower($name)])){
-            $name = $this->aliasMap[strtolower($name)];
+        if(isset($this->aliasMap[$name])){
+            $name = $this->aliasMap[$name];
             $item->setName($name);
         }
         if(isset($this->parserTagList[$name])){
