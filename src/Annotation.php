@@ -75,6 +75,10 @@ class Annotation
                     }
                 }
             }else{
+                $pos = strpos($line,'*');
+                if($pos !== false){
+                    $line = substr($line,$pos + 1);
+                }
                 $temp .= $line;
                 $ret = static::parserLine($temp);
                 if($ret){
