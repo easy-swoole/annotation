@@ -94,7 +94,7 @@ class ValueParser
         }else if($value == 'null'){
             $value = null;
         }else if(is_numeric($value)){
-            if((abs($value) - abs(intval($value)) < 0.00001) && ($hasQuote == 0)){
+            if((abs($value) - abs(intval($value)) < 0.00001)){
                 return intval($value);
             }else{
                 return floatval($value);
