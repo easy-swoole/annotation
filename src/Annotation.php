@@ -30,7 +30,11 @@ class Annotation
 
     function addParserTag(AbstractAnnotationTag $annotationTag):Annotation
     {
-        $this->parserTagList[$annotationTag->tagName()] = $annotationTag;
+        $name = $annotationTag->tagName();
+        if(isset($this->aliasMap[$name])){
+            throw new Exception("tag alias name {$name} and tag name is duplicate");
+        }
+        $this->parserTagList[$name] = $annotationTag;
         return $this;
     }
 
@@ -138,6 +142,9 @@ class Annotation
         }
         $line = substr($line,0,$pos);
         $item = new LineItem();
+        //EasySwoole\HttpAnnotation\AnnotationTag\DocTag\Auth全路径支持
+        $name = explode('\\',$name);
+        $name = end($name);
         $item->setName($name);
         $item->setValue($line);
         return $item;
