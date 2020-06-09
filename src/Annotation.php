@@ -30,11 +30,7 @@ class Annotation
 
     function addParserTag(AbstractAnnotationTag $annotationTag):Annotation
     {
-        $name = $annotationTag->tagName();
-        if(isset($this->aliasMap[$name])){
-            throw new Exception("tag alias name {$name} and tag name is duplicate");
-        }
-        $this->parserTagList[$name] = $annotationTag;
+        $this->parserTagList[$annotationTag->tagName()] = $annotationTag;
         return $this;
     }
 
@@ -93,8 +89,11 @@ class Annotation
 
     private function handleLineItem(LineItem $item,array &$result)
     {
+        $aliasHit = false;
         $name = $item->getName();
+        //如果有别名，则找出真实tag
         if(isset($this->aliasMap[$name])){
+            $aliasHit = $name;
             $name = $this->aliasMap[$name];
             $item->setName($name);
         }
@@ -103,6 +102,16 @@ class Annotation
             $tag = clone $this->parserTagList[$name];
             $tag->assetValue($item->getValue());
             $result[$name][] = $tag;
+            if($aliasHit){
+                //如果是别名命中，也要允许可以找到这个别名参数
+                if(isset($this->parserTagList[$aliasHit])){
+                    $tag = clone $this->parserTagList[$aliasHit];
+                }else{
+                    $tag = clone $this->parserTagList[$name];
+                }
+                $tag->assetValue($item->getValue());
+                $result[$aliasHit][] = $tag;
+            }
         }else if($this->strictMode){
             throw new Exception("parser fail because of unregister tag name:{$name} in strict parser mode");
         }
