@@ -4,6 +4,8 @@
 namespace EasySwoole\Annotation;
 
 
+use Doctrine\Common\Annotations\AnnotationReader;
+
 class Annotation
 {
     protected $parserTagList = [];
@@ -45,11 +47,21 @@ class Annotation
     }
 
 
-    function getAnnotation(\Reflector $method):array
+    function getAnnotation(\Reflector $ref):array
     {
-        $doc = $method->getDocComment();
-        $doc = $doc ? $doc : '';
-        return $this->parser($doc);
+        $ret = [];
+        $reader = new AnnotationReader();
+        if($ref instanceof \ReflectionMethod){
+            $temp = $reader->getMethodAnnotations($ref);
+        }else if($ref instanceof \ReflectionProperty){
+            $temp = $reader->getPropertyAnnotations($ref);
+        }else if($ref instanceof \ReflectionClass){
+            $temp = $reader->getClassAnnotations($ref);
+        }
+        if(!empty($temp)) {
+            $ret = $temp;
+        }
+        return $ret;
     }
 
     private function parser(string $doc):array
