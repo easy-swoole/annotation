@@ -21,5 +21,5 @@ abstract class AbstractAnnotationTag
         return $this->aliasFrom;
     }
 
-    public function onParser(){}
+    public function __onParser(){}
 }

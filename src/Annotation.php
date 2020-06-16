@@ -62,7 +62,7 @@ class Annotation
             foreach ($temp as $item){
                 if($item instanceof AbstractAnnotationTag){
                     $name = $item->tagName();
-                    $item->onParser();
+                    $item->__onParser();
                     if(isset($this->parserTagList[$name])){
                         $ret[$name][] = $item;
                         if(isset($this->aliasMap[$name])){
