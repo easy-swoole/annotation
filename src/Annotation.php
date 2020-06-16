@@ -19,7 +19,7 @@ class Annotation
 
     function addAlias(string $alias,string $realTagName)
     {
-        $this->aliasMap[$alias] = $realTagName;
+        $this->aliasMap[$realTagName] = $alias;
         return $this;
     }
 
@@ -59,7 +59,20 @@ class Annotation
             $temp = $reader->getClassAnnotations($ref);
         }
         if(!empty($temp)) {
-            $ret = $temp;
+            foreach ($temp as $item){
+                if($item instanceof AbstractAnnotationTag){
+                    $name = $item->tagName();
+                    if(isset($this->parserTagList[$name])){
+                        $ret[$name][] = $item;
+                        if(isset($this->aliasMap[$name])){
+                            $alias = clone $item;
+                            $alias->aliasFrom($name);
+                            $name = $this->aliasMap[$name];
+                            $ret[$name][] = $alias;
+                        }
+                    }
+                }
+            }
         }
         return $ret;
     }
