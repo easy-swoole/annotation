@@ -13,11 +13,13 @@ abstract class AbstractAnnotationTag
 
     abstract public function tagName():string;
 
-    function aliasFrom(?string $from = null):string
+    public function aliasFrom(?string $from = null):string
     {
         if($from){
             $this->aliasFrom = $from;
         }
         return $this->aliasFrom;
     }
+
+    public function onParser(){}
 }
