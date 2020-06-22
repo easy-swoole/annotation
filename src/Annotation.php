@@ -68,6 +68,7 @@ class Annotation
                         if(isset($this->aliasMap[$name])){
                             $alias = clone $item;
                             $alias->aliasFrom($name);
+                            $alias->__onParser();
                             $name = $this->aliasMap[$name];
                             $ret[$name][] = $alias;
                         }
