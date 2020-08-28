@@ -4,7 +4,8 @@
 namespace EasySwoole\Annotation;
 
 
-use Doctrine\Common\Annotations\AnnotationReader;
+
+use EasySwoole\DoctrineAnnotation\AnnotationReader;
 
 class Annotation
 {
